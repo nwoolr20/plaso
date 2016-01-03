@@ -20,5 +20,8 @@ Context: 2891
 08-12-13,02:52:32.976,292,1358,0,WNS,wnsclient.cpp(561),2cc9b18,002A1C0C,NRM,Request Channel succeeded asynchronously,pRequest=@02CC9310;channelId=1;13714367258539257282;channelUri=https://bn1.notify.windows.com/?token=AgYAAAAdkHjSxiNH1mbF0Rp5TIv0Kz317BKYIAfBNO6szULCOEE2393owBINnPC5xoika5SJlNtXZ%2bwzaRVsPRcP1p64XFn90vGwr07DGZxfna%2bxBpBBplzZhLV9y%2fNV%2bBPxNmTI5sRgaZ%2foGvYCIj6MdeU1;expiry=1378867957;transactionId=2
 ######Logging started. Version=17.0.2011.0627 StartSystemTime:2013-08-12-031857.232 StartLocalTime:2013-08-11-231857.232 PID=0x1ef0 TID=0x1ef4 ContinuedFrom=
 08-12-13,03:18:57.310,0,1ef4,0,QOS,telemetry.cpp(158),0,0,VRB,QoS enabled,
+08-12-13,03:34:46.879,391,1fb0,0,WNS,wnptransimpl.cpp(541),1218b60,01218F18,NRM,SendCommand,TrID=0x1c;cmd=ACK‹Cıj‰Cıj‡CıjDEL;pszFullNameSpace=WNS\NOTIF;cbPayloadSize=0x1b;payload=Msg-Id: 16a67cd464984a4
+
+
 08-31-13,03:45:37.940,2f8,1650,0,PAL,cwinhttp.cpp(1581),0,037BC2BC,VRB,,output=GET <- /MyData/LiveFolders?Filter=changes&InlineBlobs=false&MaxItemCount=50&SyncToken=LM%3d63511875645970%3bID%3d7F095149027848ED!103%3bLR%3d63513517536493%3bEP%3d2%3bTD%3dTrue&View=SkyDriveSync;m_httpStatus=0x130;hr=8004db30;m_pSink=null;cb=0x0;msec=0x4e
 08-31-13,03:45:38.222,2f9,32ec,0,PAL,workpool.cpp(169),0,036F9060,VRB,Firing timer ,timer=00CF41D8;start=0x22e330c;due=0x22e330c

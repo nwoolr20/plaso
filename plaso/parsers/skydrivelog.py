@@ -219,6 +219,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
           u'SkyDriveLog invalid timestamp {0:d}'.format(
               structure.hdr_timestamp))
       return
+
     detail = u'{0:s} {1:s} {2:s} {3:s} {4:s}'.format(
         structure.log_start, structure.version_string,
         structure.version_number, structure.local_time_string,
