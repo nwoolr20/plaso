@@ -1,23 +1,23 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the StatusView tool object."""
+"""Tests for the processing tool object."""
 
 import unittest
 
 import plaso
-from plaso.cli.status_view_tool import StatusViewTool
+from plaso.cli.processing_tool import ProcessingTool
 from plaso.cli import tools
 from plaso.engine import processing_status
 
 from tests.cli import test_lib
 
 
-class TestStatusViewTool(StatusViewTool):
+class TestProcessingTool(ProcessingTool):
   """Class that implements a status view for testing."""
 
   def __init__(self, input_reader=None, output_writer=None):
-    """Initializes a mock StatusViewTool object used for testing."""
-    super(TestStatusViewTool, self).__init__(
+    """Initializes a mock ProcessingTool object used for testing."""
+    super(TestProcessingTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
 
     self._number_of_analysis_reports = 0
@@ -25,8 +25,8 @@ class TestStatusViewTool(StatusViewTool):
     self._source_type_string = u'TESTSOURCE'
 
 
-class StatusViewToolTest(test_lib.CLIToolTestCase):
-  """Tests for the StatusView tool object."""
+class ProcessingToolTest(test_lib.CLIToolTestCase):
+  """Tests for the processing tool object."""
 
   # pylint: disable=protected-access
 
@@ -35,17 +35,17 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
     input_reader = tools.StdinInputReader(encoding=u'ascii')
     output_writer = test_lib.TestOutputWriter()
 
-    status_view_tool = TestStatusViewTool(
+    processing_tool = TestProcessingTool(
         input_reader=input_reader, output_writer=output_writer)
 
-    status_view_tool._PrintStatusHeader()
+    processing_tool._PrintStatusHeader()
 
     process_status = processing_status.ProcessingStatus()
     process_status.UpdateForemanStatus(
         u'f_identifier', u'f_status', 123,
         u'f_test_file', 1, 29, 3, 456, 5, 6, 7,
         8, 9, 10)
-    status_view_tool._PrintStatusUpdate(process_status)
+    processing_tool._PrintStatusUpdate(process_status)
 
     string = output_writer.ReadOutput()
 
@@ -68,7 +68,7 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
         u'w_identifier', u'w_status', 123,
         u'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
         10)
-    status_view_tool._PrintStatusUpdate(process_status)
+    processing_tool._PrintStatusUpdate(process_status)
     string = output_writer.ReadOutput()
 
     expected_string = (
@@ -89,17 +89,17 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
     input_reader = tools.StdinInputReader(encoding=u'ascii')
     output_writer = test_lib.TestOutputWriter()
 
-    status_view_tool = TestStatusViewTool(
+    processing_tool = TestProcessingTool(
         input_reader=input_reader, output_writer=output_writer)
 
-    status_view_tool._PrintStatusHeader()
+    processing_tool._PrintStatusHeader()
 
     process_status = processing_status.ProcessingStatus()
     process_status.UpdateForemanStatus(
         u'f_identifier', u'f_status', 123,
         u'f_test_file', 1, 29, 3, 456, 5, 6, 7,
         8, 9, 10)
-    status_view_tool._PrintStatusUpdateStream(process_status)
+    processing_tool._PrintStatusUpdateStream(process_status)
 
     string = output_writer.ReadOutput()
 
@@ -114,7 +114,7 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
         u'w_identifier', u'w_status', 123,
         u'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
         10)
-    status_view_tool._PrintStatusUpdateStream(process_status)
+    processing_tool._PrintStatusUpdateStream(process_status)
     string = output_writer.ReadOutput()
 
     expected_string = (

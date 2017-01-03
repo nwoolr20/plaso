@@ -5,14 +5,14 @@ import os
 
 import yara
 
-from plaso.cli import status_view_tool
+from plaso.cli import processing_tool
 from plaso.engine import engine
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import py2to3
 
 
-class ExtractionTool(status_view_tool.StatusViewTool):
+class ExtractionTool(processing_tool.ProcessingTool):
   """Class that implements an extraction CLI tool.
 
   Attributes:
@@ -60,7 +60,6 @@ class ExtractionTool(status_view_tool.StatusViewTool):
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._single_process_mode = False
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
-    self._temporary_directory = None
     self._text_prepend = None
     self._yara_rules_string = None
 
@@ -76,6 +75,8 @@ class ExtractionTool(status_view_tool.StatusViewTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
+    super(ExtractionTool, self)._ParseProcessingOptions(options)
+
     self._hasher_names_string = getattr(
         options, u'hashers', self._DEFAULT_HASHER_STRING)
     if isinstance(self._hasher_names_string, py2to3.STRING_TYPES):
@@ -123,13 +124,6 @@ class ExtractionTool(status_view_tool.StatusViewTool):
     self._process_archives = getattr(options, u'process_archives', False)
     self._process_compressed_streams = getattr(
         options, u'process_compressed_streams', True)
-
-    self._temporary_directory = getattr(options, u'temporary_directory', None)
-    if (self._temporary_directory and
-        not os.path.isdir(self._temporary_directory)):
-      raise errors.BadConfigOption(
-          u'No such temporary directory: {0:s}'.format(
-              self._temporary_directory))
 
   def _ParsePerformanceOptions(self, options):
     """Parses the performance options.
@@ -215,6 +209,8 @@ class ExtractionTool(status_view_tool.StatusViewTool):
     Args:
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
+    super(ExtractionTool, self).AddProcessingOptions(argument_group)
+
     argument_group.add_argument(
         u'--hashers', dest=u'hashers', type=str, action=u'store',
         default=self._DEFAULT_HASHER_STRING, metavar=u'HASHER_LIST', help=(
@@ -272,13 +268,6 @@ class ExtractionTool(status_view_tool.StatusViewTool):
         help=(
             u'Skip processing file content within compressed streams, such as '
             u'syslog.gz and syslog.bz2.'))
-
-    argument_group.add_argument(
-        u'--temporary_directory', u'--temporary-directory',
-        dest=u'temporary_directory', type=str, action=u'store',
-        metavar=u'DIRECTORY', help=(
-            u'Path to the directory that should be used to store temporary '
-            u'files created during extraction.'))
 
   def AddPerformanceOptions(self, argument_group):
     """Adds the performance options to the argument group.

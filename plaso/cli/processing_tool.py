@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-"""The StatusView CLI tool."""
+"""Shared functionality for CLI tools that processes input."""
 
+import os
 import sys
 
 try:
@@ -15,8 +16,8 @@ from plaso.cli import tools as cli_tools
 from plaso.cli import views as cli_views
 
 
-class StatusViewTool(storage_media_tool.StorageMediaTool):
-  """A tool that reports extraction status."""
+class ProcessingTool(storage_media_tool.StorageMediaTool):
+  """CLI tool that processes input."""
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the status view tool object.
@@ -27,7 +28,7 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
       output_writer (Optional[OutputWriter]): output writer, where None
           indicates that the stdout output writer should be used.
     """
-    super(StatusViewTool, self).__init__(
+    super(ProcessingTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
 
     self._stdout_output_writer = isinstance(
@@ -36,19 +37,7 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
     self._number_of_analysis_reports = 0
     self._source_path = None
     self._source_type_string = u'UNKNOWN'
-
-  def _PrintStatusHeader(self):
-    """Prints the processing status header."""
-    self._output_writer.Write(
-        u'Source path\t: {0:s}\n'.format(self._source_path))
-    self._output_writer.Write(
-        u'Source type\t: {0:s}\n'.format(self._source_type_string))
-
-    if self._filter_file:
-      self._output_writer.Write(u'Filter file\t: {0:s}\n'.format(
-          self._filter_file))
-
-    self._output_writer.Write(u'\n')
+    self._temporary_directory = None
 
   def _FormatStatusTableRow(self, process_status):
     """Formats a status table row.
@@ -91,6 +80,53 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
     return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}\t{5:s}'.format(
         identifier, process_status.pid, status, sources, events,
         process_status.display_name)
+
+  def _ParseProcessingOptions(self, options):
+    """Parses the processing options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._temporary_directory = getattr(options, u'temporary_directory', None)
+    if (self._temporary_directory and
+        not os.path.isdir(self._temporary_directory)):
+      raise errors.BadConfigOption(
+          u'No such temporary directory: {0:s}'.format(
+              self._temporary_directory))
+
+  def _PrintAnalysisReportsDetails(self, storage):
+    """Prints the details of the analysis reports.
+
+    Args:
+      storage (BaseStorage): storage writer.
+    """
+    for index, analysis_report in enumerate(storage.GetAnalysisReports()):
+      if index + 1 <= self._number_of_analysis_reports:
+        continue
+
+      title = u'Analysis report: {0:d}'.format(index)
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, title=title)
+
+      table_view.AddRow([u'String', analysis_report.GetString()])
+
+      table_view.Write(self._output_writer)
+
+  def _PrintStatusHeader(self):
+    """Prints the processing status header."""
+    self._output_writer.Write(
+        u'Source path\t: {0:s}\n'.format(self._source_path))
+    self._output_writer.Write(
+        u'Source type\t: {0:s}\n'.format(self._source_type_string))
+
+    if self._filter_file:
+      self._output_writer.Write(u'Filter file\t: {0:s}\n'.format(
+          self._filter_file))
+
+    self._output_writer.Write(u'\n')
 
   def _PrintStatusUpdate(self, processing_status):
     """Prints the processing status.
@@ -154,23 +190,18 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
               worker_status.status not in definitions.PROCESSING_ERROR_STATUS)
       self._output_writer.Write(status_line)
 
-  def _PrintAnalysisReportsDetails(self, storage):
-    """Prints the details of the analysis reports.
+  def AddProcessingOptions(self, argument_group):
+    """Adds the processing options to the argument group.
 
     Args:
-      storage (BaseStorage): storage writer.
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
-    for index, analysis_report in enumerate(storage.GetAnalysisReports()):
-      if index + 1 <= self._number_of_analysis_reports:
-        continue
-
-      title = u'Analysis report: {0:d}'.format(index)
-      table_view = cli_views.ViewsFactory.GetTableView(
-          self._views_format_type, title=title)
-
-      table_view.AddRow([u'String', analysis_report.GetString()])
-
-      table_view.Write(self._output_writer)
+    argument_group.add_argument(
+        u'--temporary_directory', u'--temporary-directory',
+        dest=u'temporary_directory', type=str, action=u'store',
+        metavar=u'DIRECTORY', help=(
+            u'Path to the directory that should be used to store temporary '
+            u'files created during extraction.'))
 
   def SetSourcePath(self, path):
     """Set the path of the source to process.

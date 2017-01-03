@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The storage media CLI tool."""
+"""Shared functionality for CLI tools that process storage media."""
 
 import getpass
 import logging
@@ -31,7 +31,7 @@ except KeyError:
 
 
 class StorageMediaTool(tools.CLITool):
-  """Class that implements a storage media CLI tool."""
+  """CLI tool that process storage media."""
 
   _DEFAULT_BYTES_PER_SECTOR = 512
 
