@@ -31,6 +31,7 @@ class Exim4LineEventData(events.EventData):
     super(Exim4LineEventData, self).__init__(data_type=data_type)
     self.body = None
 
+
 class Exim4Parser(text_parser.PyparsingSingleLineTextParser):
   """Parses exim4 formatted log files"""
   NAME = u'exim4'
@@ -38,8 +39,6 @@ class Exim4Parser(text_parser.PyparsingSingleLineTextParser):
   DESCRIPTION = u'Exim4 Parser'
 
   _ENCODING = u'utf-8'
-
-  _plugin_classes = {}
 
   _BODY_CONTENT = (r'.*?(?=($|\n\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}))')
 
@@ -83,7 +82,7 @@ class Exim4Parser(text_parser.PyparsingSingleLineTextParser):
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(Exim4Parser, self).__init__()
     self._last_month = 0
     self._maximum_year = 0
