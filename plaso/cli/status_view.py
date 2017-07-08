@@ -14,8 +14,8 @@ from dfvfs.lib import definitions as dfvfs_definitions
 import plaso
 
 from plaso.lib import definitions
-from plaso.cli import tools as cli_tools
-from plaso.cli import views as cli_views
+from plaso.cli import tools
+from plaso.cli import views
 
 
 class StatusView(object):
@@ -48,7 +48,7 @@ class StatusView(object):
     self._source_path = None
     self._source_type = None
     self._stdout_output_writer = isinstance(
-        output_writer, cli_tools.StdoutOutputWriter)
+        output_writer, tools.StdoutOutputWriter)
     self._storage_file_path = None
     self._tool_name = tool_name
 
@@ -369,7 +369,7 @@ class StatusView(object):
         continue
 
       title = u'Analysis report: {0:d}'.format(index)
-      table_view = cli_views.ViewsFactory.GetTableView(
+      table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
       table_view.AddRow([u'String', analysis_report.GetString()])
