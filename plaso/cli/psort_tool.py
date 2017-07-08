@@ -27,7 +27,7 @@ from plaso.engine import engine
 from plaso.engine import knowledge_base
 from plaso.lib import errors
 from plaso.multi_processing import psort
-from plaso.storage import zip_file as storage_zip_file
+from plaso.storage import factory as storage_factory
 from plaso.winnt import language_ids
 
 
@@ -368,8 +368,14 @@ class PsortTool(
         command_line_arguments=self._command_line_arguments,
         preferred_encoding=self.preferred_encoding)
 
-    storage_reader = storage_zip_file.ZIPStorageFileReader(
+    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
+    if not storage_reader:
+      logging.error(
+          u'Format of storage file: {0:s} not supported'.format(
+              self._storage_file_path))
+      return
+
     self._number_of_analysis_reports = (
         storage_reader.GetNumberOfAnalysisReports())
     storage_reader.Close()
@@ -378,8 +384,9 @@ class PsortTool(
     configuration.data_location = self._data_location
 
     if self._analysis_plugins:
-      storage_writer = storage_zip_file.ZIPStorageFileWriter(
-          session, self._storage_file_path)
+      storage_writer = (
+          storage_factory.StorageFactory.CreateStorageWriterForFile(
+              session, self._storage_file_path))
 
       # TODO: add single processing support.
       analysis_engine = psort.PsortMultiProcessEngine(
@@ -394,8 +401,9 @@ class PsortTool(
 
     counter = collections.Counter()
     if self._output_format != u'null':
-      storage_reader = storage_zip_file.ZIPStorageFileReader(
-          self._storage_file_path)
+      storage_reader = (
+          storage_factory.StorageFactory.CreateStorageReaderForFile(
+              self._storage_file_path))
 
       # TODO: add single processing support.
       analysis_engine = psort.PsortMultiProcessEngine(
@@ -427,6 +435,6 @@ class PsortTool(
       table_view.AddRow([element, count])
     table_view.Write(self._output_writer)
 
-    storage_reader = storage_zip_file.ZIPStorageFileReader(
+    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
     self._PrintAnalysisReportsDetails(storage_reader)

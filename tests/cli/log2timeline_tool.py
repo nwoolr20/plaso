@@ -7,6 +7,7 @@ import os
 import unittest
 
 from plaso.cli import log2timeline_tool
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.output import manager as output_manager
 from plaso.storage import zip_file as storage_zip_file
@@ -170,6 +171,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
     options.source = self._GetTestFilePath([u'testdir'])
     options.storage_file = u'storage.plaso'
+    options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
     test_tool.ParseOptions(options)
 
@@ -200,6 +202,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
       test_tool.ParseOptions(options)
 
@@ -232,6 +235,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
       test_tool.ParseOptions(options)
 
@@ -263,6 +267,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
       test_tool.ParseOptions(options)
 
@@ -296,6 +301,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
       test_tool.ParseOptions(options)
 
@@ -328,6 +334,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
       test_tool.ParseOptions(options)
 
@@ -363,6 +370,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
       test_tool.ParseOptions(options)
 
@@ -395,6 +403,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
       test_tool.ParseOptions(options)
 

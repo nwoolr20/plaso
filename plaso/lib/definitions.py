@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 """The definitions."""
 
+COMPRESSION_FORMAT_NONE = u'none'
+COMPRESSION_FORMAT_ZLIB = u'zlib'
+
+COMPRESSION_FORMATS = frozenset([
+    COMPRESSION_FORMAT_NONE,
+    COMPRESSION_FORMAT_ZLIB])
+
 OPERATING_SYSTEM_LINUX = u'Linux'
 OPERATING_SYSTEM_MACOSX = u'MacOSX'
 OPERATING_SYSTEM_UNKNOWN = u'Unknown'
@@ -62,6 +69,11 @@ RESERVED_VARIABLE_NAMES = frozenset([
 SERIALIZER_FORMAT_JSON = u'json'
 
 SERIALIZER_FORMATS = frozenset([SERIALIZER_FORMAT_JSON])
+
+STORAGE_FORMAT_SQLITE = u'sqlite'
+STORAGE_FORMAT_ZIP = u'zip'
+
+STORAGE_FORMATS = frozenset([STORAGE_FORMAT_SQLITE, STORAGE_FORMAT_ZIP])
 
 # The session storage contains the results of one or more sessions.
 # A typical session is e.g. a single run of a tool (log2timeline.py).
