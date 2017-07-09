@@ -2,7 +2,6 @@
 """The psort multi-processing engine."""
 
 import collections
-import heapq
 import logging
 import os
 import time
@@ -18,56 +17,6 @@ from plaso.multi_processing import engine as multi_process_engine
 from plaso.multi_processing import multi_process_queue
 from plaso.storage import event_heaps
 from plaso.storage import time_range as storage_time_range
-
-
-class _EventsHeap(object):
-  """Class that defines the events heap."""
-
-  def __init__(self):
-    """Initializes an events heap."""
-    super(_EventsHeap, self).__init__()
-    self._heap = []
-
-  @property
-  def number_of_events(self):
-    """int: number of serialized events on the heap."""
-    return len(self._heap)
-
-  def PopEvent(self):
-    """Pops an event from the heap.
-
-    Returns:
-      EventObject: event.
-    """
-    try:
-      _, _, _, event = heapq.heappop(self._heap)
-      return event
-
-    except IndexError:
-      return None
-
-  def PopEvents(self):
-    """Pops events from the heap.
-
-    Yields:
-      EventObject: event.
-    """
-    event = self.PopEvent()
-    while event:
-      yield event
-      event = self.PopEvent()
-
-  def PushEvent(self, event):
-    """Pushes an event onto the heap.
-
-    Args:
-      event (EventObject): event.
-    """
-    event_identifier = event.GetIdentifier()
-    event_identifier_string = event_identifier.CopyToString()
-    heap_values = (
-        event.timestamp, event.timestamp_desc, event_identifier_string, event)
-    heapq.heappush(self._heap, heap_values)
 
 
 class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
