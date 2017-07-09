@@ -172,11 +172,13 @@ class OutputModuleOptions(object):
 class StorageFileOptions(object):
   """Storage file options mix-in."""
 
-  def _CheckStorageFile(self, storage_file_path):
+  def _CheckStorageFile(self, storage_file_path, warn_about_existing=False):
     """Checks if the storage file path is valid.
 
     Args:
       storage_file_path (str): path of the storage file.
+      warn_about_existing (bool): True if the user should be warned about
+          the storage file already existing.
 
     Raises:
       BadConfigOption: if the storage file path is invalid.
@@ -186,7 +188,9 @@ class StorageFileOptions(object):
         raise errors.BadConfigOption(
             u'Storage file: {0:s} already exists and is not a file.'.format(
                 storage_file_path))
-      logging.warning(u'Appending to an already existing storage file.')
+
+      if warn_about_existing:
+        logging.warning(u'Appending to an already existing storage file.')
 
     dirname = os.path.dirname(storage_file_path)
     if not dirname:

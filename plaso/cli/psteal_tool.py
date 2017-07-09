@@ -277,7 +277,7 @@ class PstealTool(
           file system.
       UserAbort: if the user initiated an abort.
     """
-    self._CheckStorageFile(self._storage_file_path)
+    self._CheckStorageFile(self._storage_file_path, warn_about_existing=True)
 
     scan_context = self.ScanSource()
     source_type = scan_context.source_type

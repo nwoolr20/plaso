@@ -517,7 +517,7 @@ class Log2TimelineTool(
           file system.
       UserAbort: if the user initiated an abort.
     """
-    self._CheckStorageFile(self._storage_file_path)
+    self._CheckStorageFile(self._storage_file_path, warn_about_existing=True)
 
     scan_context = self.ScanSource()
     self._source_type = scan_context.source_type
