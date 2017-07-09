@@ -295,7 +295,7 @@ class Log2TimelineTool(
     self.AddBasicOptions(argument_parser)
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=[u'storage_file'])
+        argument_parser, names=[u'storage_file', u'storage_format'])
 
     extraction_group = argument_parser.add_argument_group(
         u'Extraction Arguments')
@@ -466,7 +466,7 @@ class Log2TimelineTool(
       root_logger.addFilter(log_filter)
 
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=[u'storage_file'])
+        options, self, names=[u'storage_file', u'storage_format'])
 
     if not self._storage_file_path:
       raise errors.BadConfigOption(u'Missing storage file option.')
