@@ -16,6 +16,7 @@ from plaso.lib import py2to3
 from plaso.multi_processing import analysis_process
 from plaso.multi_processing import engine as multi_process_engine
 from plaso.multi_processing import multi_process_queue
+from plaso.storage import event_heaps
 from plaso.storage import time_range as storage_time_range
 
 
@@ -108,7 +109,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._event_queues = {}
     # The event heap is used to make sure the events are sorted in
     # a deterministic way.
-    self._export_event_heap = _EventsHeap()
+    self._export_event_heap = event_heaps.EventHeap()
     self._export_event_lookup_table = {}
     self._export_event_timestamp = 0
     self._knowledge_base = None
@@ -377,6 +378,14 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     number_of_events_from_time_slice = 0
 
     for event in storage_reader.GetSortedEvents(time_range=time_slice):
+      event_data_identifier = event.GetEventDataIdentifier()
+      if event_data_identifier:
+        event_data = storage_reader.GetEventDataByIdentifier(
+            event_data_identifier)
+
+        for attribute_name, attribute_value in event_data.GetAttributes():
+          setattr(event, attribute_name, attribute_value)
+
       if event_filter:
         filter_match = event_filter.Match(event)
       else:

@@ -218,8 +218,8 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     container_object = container_class()
     supported_attribute_names = container_object.GetAttributeNames()
     for attribute_name, attribute_value in iter(json_dict.items()):
-      # Be strict about which attributes to set in non events.
-      if (container_type != u'event' and
+      # Be strict about which attributes to set in non event values.
+      if (container_type not in (u'event', u'event_data') and
           attribute_name not in supported_attribute_names):
 
         if attribute_name not in (u'__container_type__', u'__type__'):

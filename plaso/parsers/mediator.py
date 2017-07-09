@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The parser mediator object."""
 
+import copy
 import logging
 import os
 
@@ -32,6 +33,8 @@ class ParserMediator(object):
     self._extra_event_attributes = {}
     self._file_entry = None
     self._knowledge_base = knowledge_base
+    self._last_event_data_hash = None
+    self._last_event_data_identifier = None
     self._mount_path = None
     self._number_of_errors = 0
     self._number_of_event_sources = 0
@@ -433,6 +436,9 @@ class ParserMediator(object):
     self._storage_writer.AddEvent(event)
     self._number_of_events += 1
 
+    self._last_event_data_hash = None
+    self._last_event_data_identifier = None
+
   def ProduceEvents(self, events, query=None):
     """Produces events.
 
@@ -465,11 +471,26 @@ class ParserMediator(object):
       event (EventObject): event.
       event_data (EventData): event data.
     """
-    # TODO: store event data and event seperately.
-    for attribute_name, attribute_value in event_data.GetAttributes():
-      setattr(event, attribute_name, attribute_value)
+    event_data_hash = hash(event_data.GetAttributeValuesString())
+    if event_data_hash != self._last_event_data_hash:
+      # Make a copy of the event data before adding additional values.
+      event_data = copy.deepcopy(event_data)
 
-    self.ProduceEvent(event)
+      # TODO: refactor to ProcessEventData.
+      self.ProcessEvent(
+          event_data, parser_chain=self.GetParserChain(),
+          file_entry=self._file_entry)
+
+      self._storage_writer.AddEventData(event_data)
+
+      self._last_event_data_hash = event_data_hash
+      self._last_event_data_identifier = event_data.GetIdentifier()
+
+    if self._last_event_data_identifier:
+      event.SetEventDataIdentifier(self._last_event_data_identifier)
+
+    self._storage_writer.AddEvent(event)
+    self._number_of_events += 1
 
   def ProduceExtractionError(self, message, path_spec=None):
     """Produces an extraction error.
