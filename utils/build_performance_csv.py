@@ -16,10 +16,9 @@ from google.cloud import storage
 
 
 class PlasoCIFetcher(object):
-  RESULTS_ROOT = 'jenkins/build_results'
+  RESULTS_ROOT = 'build_results'
 
-  def __init__(self, bucket_name='', project_name='',
-      storage_file_temporary_directory=''):
+  def __init__(self, bucket_name='', project_name='', storage_file_temporary_directory=''):
     super(PlasoCIFetcher, self).__init__()
     self._storage_file_temporary_directory = storage_file_temporary_directory
     self._bucket_name = bucket_name
@@ -53,6 +52,11 @@ class PlasoCIFetcher(object):
     """Sanitizes a blog name into something that can be a path."""
     return blob.name.replace('/', '!')
 
+  def DownloadStorageFiles(self, test_name):
+    """Downloads all the storage files for a given test."""
+    # downloaded_files = list()
+    storage_file_dir = os.path.join(
+        self._storage_file_temporary_directory, test_name)
   def DownloadPinfoFiles(self, test_name):
     """Downloads all the storage files for a given test."""
     # downloaded_files = list()
@@ -109,10 +113,10 @@ class PlasoCIFetcher(object):
     translated_name = translated_name.replace(storage_file_dir, '')
     storage_client = storage.Client(project=self._project_name)
     bucket = storage_client.get_bucket(self._bucket_name)
+    # blob_name = "{0:s}/{1:s}".format(self.RESULTS_ROOT, translated_name)
     print('Uploading file {0:s}'.format(filename))
     blob = bucket.blob(translated_name)
     blob.upload_from_filename(filename)
-
 
 def ProcessTest(test_name, project_name='', bucket_name='',
     storage_file_temporary_directory=''):
@@ -227,13 +231,16 @@ def BuildCSV(test_name, storage_file_temporary_directory, metric_file_name):
 if __name__ == '__main__':
   argument_parser = argparse.ArgumentParser()
 
-  argument_parser.add_argument('temporary_directory', type=str,
+  argument_parser.add_argument(
+      'temporary_directory', type=str,
       help='Path to a temporary directory to cache storage files')
 
-  argument_parser.add_argument('project_name', type=str,
+  argument_parser.add_argument(
+      'project_name', type=str,
       help='Project where the tests were run')
 
-  argument_parser.add_argument('bucket_name', type=str,
+  argument_parser.add_argument(
+      'bucket_name', type=str,
       help='Bucket where test results are stored')
 
   options = argument_parser.parse_args()
