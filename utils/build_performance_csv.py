@@ -16,7 +16,8 @@ from google.cloud import storage
 class PlasoCIFetcher(object):
   RESULTS_ROOT = 'build_results'
 
-  def __init__(self, bucket_name='', project_name='', storage_file_temporary_directory=''):
+  def __init__(self, bucket_name='', project_name='',
+      storage_file_temporary_directory=''):
     super(PlasoCIFetcher, self).__init__()
     self._storage_file_temporary_directory = storage_file_temporary_directory
     self._bucket_name = bucket_name
@@ -80,9 +81,22 @@ class PlasoCIFetcher(object):
     blob.upload_from_filename(filename)
 
 
-def ProcessTest(test_name, project_name, storage_file_temporary_directory):
+def ProcessTest(test_name, project_name='', bucket_name='',
+    storage_file_temporary_directory=''):
+  """
+
+  Args:
+    test_name:
+    project_name:
+    storage_file_temporary_directory:
+
+  Returns:
+
+  """
   fetcher = PlasoCIFetcher(
-      project_name=project_name, storage_file_temporary_directory=storage_file_temporary_directory)
+      project_name=project_name,
+      storage_file_temporary_directory=storage_file_temporary_directory,
+      bucket_name=bucket_name)
   for storage_file in fetcher.DownloadStorageFiles(test_name):
     filename, _, _ = storage_file.partition('.')
     output_path = '{0:s}.{1:s}'.format(filename, 'json')
@@ -121,7 +135,7 @@ def BuildCSV(test_name, storage_file_temporary_directory, metric_file_name):
   storage_file_dir = os.path.join(storage_file_temporary_directory,
       test_name)
   for filename in os.listdir(storage_file_dir):
-    file_path = '{0:s}{1:s}/{2:s}'.format(path, test_name, filename)
+    file_path = '{0:s}/{1:s}/{2:s}'.format(path, test_name, filename)
     if 'json' not in filename:
       continue
     if 'gold' in filename:
@@ -157,6 +171,7 @@ def BuildCSV(test_name, storage_file_temporary_directory, metric_file_name):
 
   metric_file_name = os.path.join('/tmp', metric_file_name)
   with open(metric_file_name, b'w') as csvfile:
+    # TODO: ad build number and git hash
     csvwriter = csv.DictWriter(csvfile, fieldnames=fieldnames, restval=0)
     csvwriter.writeheader()
     rows = sorted(metrics_rows)
@@ -181,12 +196,14 @@ if __name__ == '__main__':
 
   options = argument_parser.parse_args()
 
-  test_names = [
-    'plaso_registrar_end_to_end', 'plaso_studentpc1_end_to_end',
-    'plaso_dean_end_to_end', 'plaso_acserver_end_to_end',
-    'plaso_end_to_end_windows_studentpc1']
+  #test_names = [
+  #  'plaso_registrar_end_to_end', 'plaso_studentpc1_end_to_end',
+  #  'plaso_dean_end_to_end', 'plaso_acserver_end_to_end',
+  #  'plaso_end_to_end_windows_studentpc1']
+  test_names = ['plaso_registrar_end_to_end']
   for test in test_names:
-    ProcessTest(test, project_name=options.project_name, )
+    ProcessTest(test, project_name=options.project_name,
+        bucket_name=options.bucket_name, storage_file_temporary_directory=options.temporary_directory)
     output_name = '{0:s}_metrics.csv'.format(test)
     BuildCSV(test, storage_file_temporary_directory=options.temporary_directory,
-    metric_file_name=output_name)
+        metric_file_name=output_name)
