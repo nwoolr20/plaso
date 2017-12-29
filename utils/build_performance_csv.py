@@ -16,7 +16,7 @@ from google.cloud import storage
 
 
 class PlasoCIFetcher(object):
-  RESULTS_ROOT = 'build_results'
+  RESULTS_ROOT = 'jenkins/build_results'
 
   def __init__(self, bucket_name='', project_name='',
       storage_file_temporary_directory=''):
@@ -156,7 +156,8 @@ def BuildCSV(test_name, storage_file_temporary_directory, metric_file_name):
           session['start_time'] / 1000000)
       elapsed_time = (session['completion_time'] - session[
         'start_time']) / 100000
-      number_of_parsers = len(session['enabled_parser_names'])
+      enabled_parser_names = session.get('enabled_parser_names', [])
+      number_of_parsers = len(enabled_parser_names)
 
       # Add counts from parsers
       for parser_name, event_count in session['parsers_counter'].items():
