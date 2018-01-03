@@ -146,3 +146,9 @@ Copyright SANS Institute - Digital Forensics and Incident Response.
 * SysEvent.Evt
 * System.evtx
 * Windows.edb
+
+Copied with permission by Guillaume Arcas, Hugo Gonzales and Julia Cheng
+Licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0
+Unported License. From The Honeynet Challenge:
+https://www.honeynet.org/challenges/2011_7_compromised_server
+* exim4/mainlog
