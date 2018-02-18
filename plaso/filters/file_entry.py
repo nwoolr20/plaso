@@ -9,6 +9,8 @@ import logging
 
 import pysigscan
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 from plaso.lib import py2to3
 from plaso.lib import timelib
 
@@ -82,19 +84,19 @@ class DateTimeFileEntryFilter(FileEntryFilter):
       raise ValueError(
           'Unsupported time value: {0:s}.'.format(time_value))
 
+    start_timestamp = None
     if start_time_string:
-      start_timestamp = timelib.Timestamp.CopyFromString(start_time_string)
-    else:
-      start_timestamp = None
+      start_timestamp = dfdatetime_time_elements.TimeElements()
+      start_timestamp.CopyFromDateTimeString(start_time_string)
 
+    end_timestamp = None
     if end_time_string:
-      end_timestamp = timelib.Timestamp.CopyFromString(end_time_string)
-    else:
-      end_timestamp = None
+      end_timestamp = dfdatetime_time_elements.TimeElements()
+      end_timestamp.CopyFromDateTimeString(end_time_string)
 
     # Make sure that the end timestamp occurs after the beginning.
     # If not then we need to reverse the time range.
-    if (None not in [start_timestamp, end_timestamp] and
+    if (None not in (start_timestamp, end_timestamp) and
         start_timestamp > end_timestamp):
       raise ValueError(
           'Invalid date time value start must be earlier than end.')
