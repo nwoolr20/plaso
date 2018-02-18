@@ -24,6 +24,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   # pylint: disable=protected-access
 
+  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testGetEarliestYearFromFileEntry(self):
     """Tests the _GetEarliestYearFromFileEntry function."""
     session = sessions.Session()
@@ -33,10 +34,61 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     earliest_year = parsers_mediator._GetEarliestYearFromFileEntry()
     self.assertIsNone(earliest_year)
 
+    # Test retrieving earliest year from creation time.
+    test_path = self._GetTestFilePath(['vsstest.qcow2'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec)
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=41,
+        location='/password.txt', parent=qcow_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+    parsers_mediator.SetFileEntry(file_entry)
+
+    earliest_year = parsers_mediator._GetEarliestYearFromFileEntry()
+    self.assertEqual(earliest_year, 2013)
+
+    # Test retrieving earliest year from GZIP modification time.
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=35, location='/syslog.gz',
+        parent=qcow_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+    parsers_mediator.SetFileEntry(file_entry)
+
+    earliest_year = parsers_mediator._GetEarliestYearFromFileEntry()
+    self.assertEqual(earliest_year, 2013)
+
+    # Test retrieving latest year from change time.
     # TODO: improve test coverage.
 
-  # TODO: add tests for _GetInode.
+  def testGetInode(self):
+    """Tests the _GetInode function."""
+    session = sessions.Session()
+    storage_writer = fake_writer.FakeStorageWriter(session)
+    parsers_mediator = self._CreateParserMediator(storage_writer)
 
+    inode = parsers_mediator._GetInode(41)
+    self.assertEqual(inode, 41)
+
+    inode = parsers_mediator._GetInode(41.0)
+    self.assertEqual(inode, 41)
+
+    inode = parsers_mediator._GetInode('41')
+    self.assertEqual(inode, 41)
+
+    inode = parsers_mediator._GetInode('41-128-1')
+    self.assertEqual(inode, 41)
+
+    inode = parsers_mediator._GetInode((41, 128, 1))
+    self.assertEqual(inode, -1)
+
+    inode = parsers_mediator._GetInode('bogus')
+    self.assertEqual(inode, -1)
+
+  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testGetLatestYearFromFileEntry(self):
     """Tests the _GetLatestYearFromFileEntry function."""
     session = sessions.Session()
@@ -46,6 +98,23 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     latest_year = parsers_mediator._GetLatestYearFromFileEntry()
     self.assertIsNone(latest_year)
 
+    # Test retrieving latest year from modification time.
+    test_path = self._GetTestFilePath(['vsstest.qcow2'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec)
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=41,
+        location='/password.txt', parent=qcow_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+    parsers_mediator.SetFileEntry(file_entry)
+
+    latest_year = parsers_mediator._GetLatestYearFromFileEntry()
+    self.assertEqual(latest_year, 2013)
+
+    # Test retrieving latest year from change time.
     # TODO: improve test coverage.
 
   # TODO: add tests for AddEventAttribute.
