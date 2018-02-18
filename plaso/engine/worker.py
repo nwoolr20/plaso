@@ -571,10 +571,7 @@ class EventExtractionWorker(object):
       event_source = event_sources.FileEntryEventSource(
           path_spec=sub_file_entry.path_spec)
 
-      # TODO: move this into a dfVFS file entry property.
-      stat_object = sub_file_entry.GetStat()
-      if stat_object:
-        event_source.file_entry_type = stat_object.type
+      event_source.file_entry_type = sub_file_entry.entry_type
 
       mediator.ProduceEventSource(event_source)
 

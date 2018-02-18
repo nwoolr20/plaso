@@ -86,7 +86,7 @@ class FileStatParser(interface.FileEntryParser):
     file_system_type = self._GetFileSystemTypeFromFileEntry(file_entry)
 
     event_data = FileStatEventData()
-    event_data.file_entry_type = stat_object.type
+    event_data.file_entry_type = file_entry.entry_type
     event_data.file_size = getattr(stat_object, 'size', None)
     event_data.file_system_type = file_system_type
     event_data.is_allocated = file_entry.IsAllocated()
