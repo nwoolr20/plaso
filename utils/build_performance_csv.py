@@ -28,7 +28,7 @@ class PlasoCIFetcher(object):
   def GetPinfoOutput(self, test_name):
     storage_client = storage.Client(project=self._project_name)
     bucket = storage_client.get_bucket(self._bucket_name)
-    prefix = '{0:s}/{1:s}'.format(self.RESULTS_ROOT, test_name)
+    prefix = '{0:s}/{1:s}/'.format(self.RESULTS_ROOT, test_name)
     for blob in bucket.list_blobs(prefix=prefix):
       if blob.name.endswith('-pinfo.out'):
         yield blob
@@ -242,11 +242,10 @@ if __name__ == '__main__':
   #  'plaso_registrar_end_to_end', 'plaso_studentpc1_end_to_end',
   #  'plaso_dean_end_to_end', 'plaso_acserver_end_to_end',
   #  'plaso_end_to_end_windows_studentpc1']
-  # test_names = ['plaso_registrar_end_to_end']
-  test_names = ['plaso-e2e-registrar-sqlite', 'plaso-linux-e2e-acserver',
-                'plaso-linux-e2e-dean', 'plaso-linux-e2e-registrar',
-                'plaso-linux-e2e-studentpc1-experimental',
-                'plaso-linux-e2e-studentpc1']
+  #test_names = ['plaso_registrar_end_to_end']
+  # test_names = ['plaso-e2e-registrar-sqlite']
+  #test_names = ['plaso-e2e-registrar']
+  test_names = ['plaso-linux-e2e-registrar']
   for test in test_names:
     ProcessTest(test, project_name=options.project_name,
         bucket_name=options.bucket_name,
