@@ -16,15 +16,29 @@ from google.cloud import storage
 
 
 class PlasoCIFetcher(object):
-  RESULTS_ROOT = 'build_results'
+  RESULTS_ROOT = 'jenkins/build_results'
 
-  def __init__(self, bucket_name='', project_name='', storage_file_temporary_directory=''):
+  def __init__(self, bucket_name='', project_name='',
+      storage_file_temporary_directory=''):
+    """Initializes a class that fetches results from a Plaso test store.
+
+    Args:
+
+    """
     super(PlasoCIFetcher, self).__init__()
     self._storage_file_temporary_directory = storage_file_temporary_directory
     self._bucket_name = bucket_name
     self._project_name = project_name
 
   def GetPinfoOutput(self, test_name):
+    """Iterates over pinfo output files for an end-to-end test.
+
+    Args:
+      test_name (str): name of test to get storage files for.
+
+    Yields:
+      names of all pinfo output files for the given test.
+    """
     storage_client = storage.Client(project=self._project_name)
     bucket = storage_client.get_bucket(self._bucket_name)
     prefix = '{0:s}/{1:s}/'.format(self.RESULTS_ROOT, test_name)
@@ -32,14 +46,14 @@ class PlasoCIFetcher(object):
       if blob.name.endswith('-pinfo.out'):
         yield blob
 
-
   def GetStorageFileBlobs(self, test_name):
     """Iterates over plaso storage files for an end-to-end test.
 
     Args:
       test_name (str): name of test to get storage files for.
 
-    Yields: names of all storage files for the given test.
+    Yields:
+      names of all .plaso storage files for the given test.
     """
     storage_client = storage.Client(project=self._project_name)
     bucket = storage_client.get_bucket(self._bucket_name)
@@ -49,17 +63,11 @@ class PlasoCIFetcher(object):
         yield blob
 
   def _GetNameForBlob(self, blob):
-    """Sanitizes a blog name into something that can be a path."""
+    """Sanitizes a blob name into something that can be a path."""
     return blob.name.replace('/', '!')
 
-  def DownloadStorageFiles(self, test_name):
-    """Downloads all the storage files for a given test."""
-    # downloaded_files = list()
-    storage_file_dir = os.path.join(
-        self._storage_file_temporary_directory, test_name)
   def DownloadPinfoFiles(self, test_name):
-    """Downloads all the storage files for a given test."""
-    # downloaded_files = list()
+    """Downloads all pinfo files for a given test."""
     storage_file_dir = os.path.join(self._storage_file_temporary_directory,
         test_name)
     try:
@@ -67,6 +75,7 @@ class PlasoCIFetcher(object):
     except OSError:
       # Directory already exists.
       pass
+
     for blob in self.GetPinfoOutput(test_name):
       temp_name = self._GetNameForBlob(blob)
       blob_path = os.path.join(storage_file_dir, temp_name)
@@ -118,6 +127,7 @@ class PlasoCIFetcher(object):
     blob = bucket.blob(translated_name)
     blob.upload_from_filename(filename)
 
+
 def ProcessTest(test_name, project_name='', bucket_name='',
     storage_file_temporary_directory=''):
   """
@@ -135,24 +145,24 @@ def ProcessTest(test_name, project_name='', bucket_name='',
       storage_file_temporary_directory=storage_file_temporary_directory,
       bucket_name=bucket_name)
   list(fetcher.DownloadPinfoFiles(test_name))
-  # for storage_file in fetcher.DownloadPinfoFiles(test_name):
-  #   filename, _, _ = storage_file.partition('.')
-  #   output_path = '{0:s}.{1:s}'.format(filename, 'json')
-  #   if os.path.exists(output_path):
-  #     continue
-  #   try:
-  #     with open(output_path, b'w') as output_file:
-  #       output_writer = tools.FileObjectOutputWriter(output_file)
-  #       tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-  #       tool._storage_file_path = storage_file
-  #       tool._output_format = 'json'
-  #       tool.PrintStorageInformation()
-  #   except plaso.lib.errors.BadConfigOption:
-  #     # File couldn't be processed.
-  #     os.unlink(output_path)
-  #     continue
-  #
-  #   fetcher.UploadMetadataFile(output_path, test_name)
+  for storage_file in fetcher.DownloadPinfoFiles(test_name):
+    filename, _, _ = storage_file.partition('.')
+    output_path = '{0:s}.{1:s}'.format(filename, 'json')
+    if os.path.exists(output_path):
+      continue
+    try:
+      with open(output_path, b'w') as output_file:
+        output_writer = tools.FileObjectOutputWriter(output_file)
+        tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        tool._storage_file_path = storage_file
+        tool._output_format = 'json'
+        tool.PrintStorageInformation()
+    except plaso.lib.errors.BadConfigOption:
+      # File couldn't be processed.
+      os.unlink(output_path)
+      continue
+
+    fetcher.UploadMetadataFile(output_path, test_name)
 
 
 def BuildCSV(test_name, storage_file_temporary_directory, metric_file_name):
@@ -243,16 +253,21 @@ if __name__ == '__main__':
       'bucket_name', type=str,
       help='Bucket where test results are stored')
 
+  argument_parser.add_argument(
+      'test_names', type=str,
+      help='Comma separated list of test names to process')
+
   options = argument_parser.parse_args()
 
-  #test_names = [
+  # test_names = [
   #  'plaso_registrar_end_to_end', 'plaso_studentpc1_end_to_end',
   #  'plaso_dean_end_to_end', 'plaso_acserver_end_to_end',
   #  'plaso_end_to_end_windows_studentpc1']
-  #test_names = ['plaso_registrar_end_to_end']
+  # test_names = ['plaso_registrar_end_to_end']
   # test_names = ['plaso-e2e-registrar-sqlite']
-  #test_names = ['plaso-e2e-registrar']
-  test_names = ['plaso-linux-e2e-registrar']
+  # test_names = ['plaso-e2e-registrar']
+  # test_names = ['plaso-linux-e2e-registrar']
+  test_names = options.test_names.split(',')
   for test in test_names:
     ProcessTest(test, project_name=options.project_name,
         bucket_name=options.bucket_name,

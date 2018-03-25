@@ -12,25 +12,28 @@ import datetime
 
 import elasticsearch
 
-class ElasticImporter(object):
-  INDEX_NAME = 'plaso_test_summaries'
+from utils.build_performance_csv import PlasoCIFetcher
 
-  def __init__(self, host='localhost', port=9200):
+
+class ElasticImporter(object):
+
+  def __init__(self, host='localhost', port=9200, index='plaso_test_summaries'):
     super(ElasticImporter, self).__init__()
     self._client = elasticsearch.Elasticsearch([{'host': host, 'port': port}])
+    self._index_name = index
 
   def AddTestResult(self, test_name, build_number, document):
-    """
+    """Adds a test result to the elasticsearch index.
 
     Args:
       test_name (str): name of the test
       build_number (int): number of the build of the test
-      document (str): JSON document describing the test result
+      document (dict): JSON document describing the test result
     """
     identifier = '{0:s}-{1:d}'.format(test_name, build_number)
     try:
       resource = self._client.index(
-          index=self.INDEX_NAME, doc_type='test-summary', body=document,
+          index=self._index_name, doc_type='test-summary', body=document,
           id=identifier)
     except elasticsearch.exceptions.RequestError as exception:
       print(exception)
@@ -38,9 +41,16 @@ class ElasticImporter(object):
 
     print(resource)
 
+
 class TestReader(object):
 
   def ReadTests(self, temporary_directory, elastic_importer):
+    """Reads tests result data from a temporary directory.
+
+    Args:
+      temporary_directory (str): path to a directory containing test results.
+      elastic_importer (ElasticImporter): instance of elastic inserter client.
+    """
     for test_dir in os.listdir(temporary_directory):
       test_path = '{0:s}/{1:s}/'.format(temporary_directory, test_dir)
       if not os.path.isdir(test_path):
@@ -59,7 +69,8 @@ class TestReader(object):
           except ValueError:
             print('Couldn\'t load {0:s}'.format(filename))
             continue
-          document = self.BuildTestDocument(pinfo_output, test_dir, build_number)
+          document = self.BuildTestDocument(pinfo_output, test_dir,
+              build_number)
           elastic_importer.AddTestResult(test_dir, build_number, document)
 
   def BuildTestDocument(self, pinfo_output, test_name, build_number):
@@ -102,15 +113,35 @@ class TestReader(object):
     return document
 
 
-
 if __name__ == '__main__':
   argument_parser = argparse.ArgumentParser()
 
-  argument_parser.add_argument('temporary_directory', type=str,
+  argument_parser.add_argument(
+      '--project_name', type=str,
+      help='Project where the tests were run')
+
+  argument_parser.add_argument(
+      '--bucket_name', type=str,
+      help='Bucket where test results are stored')
+
+  argument_parser.add_argument(
+      '--test_names', type=str,
+      help='Comma separated list of test names to process')
+
+  argument_parser.add_argument('--temporary_directory', type=str,
       help='Path to a temporary directory where storage files are cached')
-  argument_parser.add_argument('host', type=str, default='localhost',
+
+  argument_parser.add_argument('--host', type=str, default='localhost',
       help='hostname or IP address of the elasticsearch server.')
+
   options = argument_parser.parse_args()
+
+  fetcher = PlasoCIFetcher(
+      options.bucket_name, options.project_name, options.temporary_directory)
+
+  test_names = options.test_names.split(',')
+  for test_name in test_names:
+    _ = list(fetcher.DownloadPinfoFiles(test_name))
 
   importer = ElasticImporter(host=options.host)
   reader = TestReader()
