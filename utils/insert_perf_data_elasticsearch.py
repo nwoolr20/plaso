@@ -84,7 +84,7 @@ class TestReader(object):
     start_date = datetime.datetime.utcfromtimestamp(
         session['start_time'] / 1000000)
     elapsed_time = (session['completion_time'] - session[
-      'start_time']) / 10000
+      'start_time']) / 1000000
     enabled_parser_names = session.get('enabled_parser_names', [])
     number_of_parsers = len(enabled_parser_names)
 
@@ -136,12 +136,12 @@ if __name__ == '__main__':
 
   options = argument_parser.parse_args()
 
-  #fetcher = PlasoCIFetcher(
-  #    options.bucket_name, options.project_name, options.temporary_directory)
+  fetcher = PlasoCIFetcher(
+      options.bucket_name, options.project_name, options.temporary_directory)
 
   test_names = options.test_names.split(',')
-  #for test_name in test_names:
-  #  _ = list(fetcher.DownloadPinfoFiles(test_name))
+  for test_name in test_names:
+    _ = list(fetcher.DownloadPinfoFiles(test_name))
 
   importer = ElasticImporter(host=options.host)
   reader = TestReader()

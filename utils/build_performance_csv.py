@@ -203,7 +203,7 @@ def BuildCSV(test_name, storage_file_temporary_directory, metric_file_name):
       start_date = datetime.datetime.utcfromtimestamp(
           session['start_time'] / 1000000)
       elapsed_time = (session['completion_time'] - session[
-        'start_time']) / 10000
+        'start_time']) / 1000000
       enabled_parser_names = session.get('enabled_parser_names', [])
       number_of_parsers = len(enabled_parser_names)
 
