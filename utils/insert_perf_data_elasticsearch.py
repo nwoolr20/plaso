@@ -20,6 +20,13 @@ class ElasticImporter(object):
     self._client = elasticsearch.Elasticsearch([{'host': host, 'port': port}])
 
   def AddTestResult(self, test_name, build_number, document):
+    """
+
+    Args:
+      test_name (str): name of the test
+      build_number (int): number of the build of the test
+      document (str): JSON document describing the test result
+    """
     identifier = '{0:s}-{1:d}'.format(test_name, build_number)
     try:
       resource = self._client.index(
@@ -101,8 +108,10 @@ if __name__ == '__main__':
 
   argument_parser.add_argument('temporary_directory', type=str,
       help='Path to a temporary directory where storage files are cached')
+  argument_parser.add_argument('host', type=str, default='localhost',
+      help='hostname or IP address of the elasticsearch server.')
   options = argument_parser.parse_args()
 
-  importer = ElasticImporter()
+  importer = ElasticImporter(host=options.host)
   reader = TestReader()
   reader.ReadTests(options.temporary_directory, importer)
