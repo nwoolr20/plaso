@@ -74,8 +74,12 @@ class TestReader(object):
           elastic_importer.AddTestResult(test_dir, build_number, document)
 
   def BuildTestDocument(self, pinfo_output, test_name, build_number):
+
+
     fieldnames = ['build_number', 'start_date', 'elapsed_time',
       'number_of_parsers', 'total_events']
+
+
     document = {
       'test_name': test_name,
       'build_number': build_number,
