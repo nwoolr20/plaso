@@ -394,6 +394,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
       try:
         if not task:
+          logger.debug(
+              'Retrying task {0:s} for path specification {1:s}'.format(
+                  task.identifier, task.path_spec.comparable))
           task = self._task_manager.GetRetryTask()
         if event_source and not task:
           task = self._task_manager.CreateTask(self._session_identifier)
