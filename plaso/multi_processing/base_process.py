@@ -118,6 +118,9 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     """
     self._StopProfiling()
 
+    # Make sure log files are cleanly closed.
+    logging.shutdown()
+
     # Note that the original SIGKILL handler can be 0.
     if self._original_sigkill_handler is not None:
       # Let the original SIGKILL handler take over.
@@ -289,8 +292,8 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     # This will prevent a process from generating a traceback when interrupted.
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-    # A SIGKILL signal handler is necessary to make sure guppy is correctly
-    # closed on terminate.
+    # A SIGKILL signal handler is necessary to make sure the profilers and
+    # logging are closed correctly on terminate.
     self._original_sigkill_handler = signal.signal(
         signal.SIGKILL, self._SigKillHandler)
 
