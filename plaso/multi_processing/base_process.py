@@ -46,6 +46,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     self._guppy_memory_profiler = None
     self._log_filename = None
     self._memory_profiler = None
+    self._original_sigkill_handler = None
     self._original_sigsegv_handler = None
     self._parsers_profiler = None
     # TODO: check if this can be replaced by self.pid or does this only apply
@@ -107,6 +108,21 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     the error.
     """
     return
+
+  def _SigKillHandler(self, unused_signal_number, unused_stack_frame):
+    """Signal handler for the SIGKILL signal.
+
+    Args:
+      signal_number (int): numeric representation of the signal.
+      stack_frame (frame): current stack frame or None.
+    """
+    self._StopProfiling()
+
+    # Note that the original SIGKILL handler can be 0.
+    if self._original_sigkill_handler is not None:
+      # Let the original SIGKILL handler take over.
+      signal.signal(signal.SIGKILL, self._original_sigkill_handler)
+      os.kill(self._pid, signal.SIGKILL)
 
   def _SigSegvHandler(self, unused_signal_number, unused_stack_frame):
     """Signal handler for the SIGSEGV signal.
@@ -272,6 +288,11 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     # Prevent the KeyboardInterrupt being raised inside the process.
     # This will prevent a process from generating a traceback when interrupted.
     signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+    # A SIGKILL signal handler is necessary to make sure guppy is correctly
+    # closed on terminate.
+    self._original_sigkill_handler = signal.signal(
+        signal.SIGKILL, self._SigKillHandler)
 
     # A SIGTERM signal handler is necessary to make sure IPC is cleaned up
     # correctly on terminate.
