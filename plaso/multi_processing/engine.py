@@ -126,7 +126,7 @@ class MultiProcessEngine(engine.BaseEngine):
           'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
           'memory limit: {2:d}.').format(
               process.name, pid, self._worker_memory_limit))
-      self._KillProcess(pid)
+      self._AbortProcess(pid)
 
     if isinstance(process_status, dict):
       self._rpc_errors_per_pid[pid] = 0
@@ -206,6 +206,18 @@ class MultiProcessEngine(engine.BaseEngine):
       except OSError as exception:
         logger.error('Unable to kill process {0:d} with error: {1!s}'.format(
             pid, exception))
+
+  def _AbortProcess(self, pid):
+    """Issues a SIGABRT or equivalent to the process.
+
+    Args:
+      pid (int): process identifier (PID).
+    """
+    try:
+      os.kill(pid, signal.SIGABRT)
+    except OSError as exception:
+      logger.error('Unable to kill process {0:d} with error: {1!s}'.format(
+          pid, exception))
 
   def _QueryProcessStatus(self, process):
     """Queries a process to determine its status.
