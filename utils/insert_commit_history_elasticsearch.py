@@ -18,6 +18,8 @@ class ElasticInserter(object):
 
   def AddCommit(self, commit):
     identifier = commit['sha']
+    timestamp = commit['commit']['committer']['date']
+    commit['@timestamp'] = timestamp
     try:
       resource = self._client.index(
           index=self._index_name, doc_type=self._doc_type, body=commit,
