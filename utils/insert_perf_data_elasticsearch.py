@@ -16,11 +16,15 @@ from utils.build_performance_csv import PlasoCIFetcher
 
 
 class ElasticImporter(object):
+  """Inserts documents into an elasticsearch index."""
 
   def __init__(self, host='localhost', port=9200, index='plaso_test_summaries'):
     super(ElasticImporter, self).__init__()
     self._client = elasticsearch.Elasticsearch([{'host': host, 'port': port}])
     self._index_name = index
+    self._doc_type = 'test-summary'
+    self._UpdateMapping()
+
 
   def AddTestResult(self, test_name, build_number, document):
     """Adds a test result to the elasticsearch index.
@@ -33,13 +37,26 @@ class ElasticImporter(object):
     identifier = '{0:s}-{1:d}'.format(test_name, build_number)
     try:
       resource = self._client.index(
-          index=self._index_name, doc_type='test-summary', body=document,
+          index=self._index_name, doc_type=self._doc_type, body=document,
           id=identifier)
     except elasticsearch.exceptions.RequestError as exception:
       print(exception)
       return
 
     print(resource)
+
+  def _UpdateMapping(self):
+    self._client.indices.put_mapping(
+        index=self._index_name,
+        doc_type=self._doc_type,
+        body={
+          "properties": {
+            "test_name": {
+              "type": "keyword",
+              "doc_values": True
+            }
+          }
+        })
 
 
 class TestReader(object):
@@ -74,11 +91,16 @@ class TestReader(object):
           elastic_importer.AddTestResult(test_dir, build_number, document)
 
   def BuildTestDocument(self, pinfo_output, test_name, build_number):
+    """Builds a JSON to represent the results of a test.
 
+    Args:
+
+    Returns:
+      JSON document.
+    """
 
     fieldnames = ['build_number', 'start_date', 'elapsed_time',
       'number_of_parsers', 'total_events']
-
 
     document = {
       'test_name': test_name,
