@@ -23,6 +23,7 @@ class ElasticImporter(object):
     self._client = elasticsearch.Elasticsearch([{'host': host, 'port': port}])
     self._index_name = index
     self._doc_type = 'test-summary'
+    self._CreateIndex()
     self._UpdateMapping()
 
 
@@ -44,6 +45,10 @@ class ElasticImporter(object):
       return
 
     print(resource)
+
+  def _CreateIndex(self):
+    if not self._client.indices.exists(self._index_name):
+      self._client.indices.create(self._index_name)
 
   def _UpdateMapping(self):
     self._client.indices.put_mapping(
