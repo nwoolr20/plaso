@@ -91,7 +91,7 @@ class ElasticLaunchpadInserter(object):
       date = dateutil.parser.parse(timestamp)
       return date
     except (KeyError, IndexError):
-      return datetime(0)
+      return datetime.datetime(2009, 1, 1)
 
   def _CreateIndex(self):
     if not self._client.indices.exists(self._index_name):
@@ -148,6 +148,7 @@ class GIFTFetcher(object):
     desired_dist_and_arch = (
         'https://api.launchpad.net/devel/ubuntu/{0:s}/{1:s}'.format(
             distribution, architecture))
+    print(changes_since)
     binaries = ppa.getPublishedBinaries(created_since_date=changes_since,
         status='Published', distro_arch_series=desired_dist_and_arch)
     for binary in binaries:
