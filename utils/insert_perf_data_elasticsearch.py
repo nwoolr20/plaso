@@ -260,7 +260,8 @@ class TestReader(object):
     total_events = sum(events_counter.values())
 
     warnings_by_parser_chain = counters['warnings_by_parser_chain']
-    warnings_by_parser_chain['<no parser>'] = warnings_by_parser_chain.pop('')
+    if '' in warnings_by_parser_chain:
+      warnings_by_parser_chain['<no parser>'] = warnings_by_parser_chain.pop('')
     total_warnings = sum(warnings_by_parser_chain.values())
 
     warnings_by_pathspec = counters['warnings_by_path_spec']
@@ -312,6 +313,7 @@ if __name__ == '__main__':
     _ = list(fetcher.DownloadPinfoFiles(
         series, minimum_test_number=minimum_test_number))
 
+  minimum_test_number = 0
   reader = TestReader()
   reader.ReadTests(fetcher, options.temporary_directory, importer,
       minimum_test_number=minimum_test_number)
