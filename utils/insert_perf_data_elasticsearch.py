@@ -310,7 +310,7 @@ if __name__ == '__main__':
   for series in test_series_argument:
     minimum_test_number = importer.GetLatestTestNumber(series)
     _ = list(fetcher.DownloadPinfoFiles(
-        series, minimum_test_number=529))
+        series, minimum_test_number=minimum_test_number))
 
   reader = TestReader()
   reader.ReadTests(fetcher, options.temporary_directory, importer,
