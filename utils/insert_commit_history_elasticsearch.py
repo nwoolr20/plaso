@@ -74,6 +74,23 @@ class ElasticLaunchpadInserter(object):
 
     print(resource)
 
+  def GetLatestPublish(self, distribution, architecture):
+    try:
+      results = self._client.search(
+          index=self._index_name,
+          q='distribution:"{0:s}" AND architecture:"{1:s}"'.format(distribution,
+              architecture),
+          sort='@timestamp:desc', size=1)
+    except elasticsearch.exceptions.RequestError:
+      return 0
+
+    # The elasticsearch result isn't very strongly structured...
+    try:
+      test_number = results['hits']['hits'][0]['_source']['@timestamp']
+      return test_number
+    except (KeyError, IndexError):
+      return 0
+
   def _CreateIndex(self):
     if not self._client.indices.exists(self._index_name):
       self._client.indices.create(self._index_name)
@@ -168,8 +185,12 @@ if __name__ == '__main__':
 
   inserter = ElasticLaunchpadInserter(host=options.host)
   fetcher = GIFTFetcher()
+  distribution = 'xenial'
+  architecture = 'amd64'
+  changes_since = inserter.GetLatestPublish(distribution, architecture)
   for binary_publish_record in fetcher.GetPackageChanges(
-      distribution='xenial', architecture='amd64'):
+      distribution=distribution, architecture=architecture, changes_since=changes_since):
     document = fetcher.BuildBinaryPublishDocument(
-        binary_publish_record, distribution='xenial', architecture='amd64')
+        binary_publish_record, distribution=distribution,
+        architecture=architecture)
     inserter.AddPublish(document)
