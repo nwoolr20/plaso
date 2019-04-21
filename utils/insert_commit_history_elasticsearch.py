@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 import datetime
+import dateutil.parser
 import json
 import elasticsearch
 import argparse
@@ -86,10 +87,11 @@ class ElasticLaunchpadInserter(object):
 
     # The elasticsearch result isn't very strongly structured...
     try:
-      test_number = results['hits']['hits'][0]['_source']['@timestamp']
-      return test_number
+      timestamp = results['hits']['hits'][0]['_source']['@timestamp']
+      date = dateutil.parser.parse(timestamp)
+      return date
     except (KeyError, IndexError):
-      return 0
+      return datetime(0)
 
   def _CreateIndex(self):
     if not self._client.indices.exists(self._index_name):
