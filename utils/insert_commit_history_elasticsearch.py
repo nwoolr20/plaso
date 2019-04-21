@@ -83,7 +83,7 @@ class ElasticLaunchpadInserter(object):
               architecture),
           sort='@timestamp:desc', size=1)
     except elasticsearch.exceptions.RequestError:
-      return 0
+      return datetime.datetime(2009, 1, 1)
 
     # The elasticsearch result isn't very strongly structured...
     try:
