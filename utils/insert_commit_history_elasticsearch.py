@@ -34,6 +34,23 @@ class ElasticGithubInserter(object):
 
     print(resource)
 
+  def GetLatestCommit(self, project_path):
+    try:
+      results = self._client.search(
+          index=self._index_name,
+          q='project_path:"{0:s}'.format(project_path),
+          sort='@timestamp:desc', size=1)
+    except elasticsearch.exceptions.RequestError:
+      return datetime.datetime(2009, 1, 1)
+
+    # The elasticsearch result isn't very strongly structured...
+    try:
+      timestamp = results['hits']['hits'][0]['_source']['@timestamp']
+      date = dateutil.parser.parse(timestamp)
+      return date
+    except (KeyError, IndexError):
+      return datetime.datetime(2009, 1, 1)
+
   def _CreateIndex(self):
     if not self._client.indices.exists(self._index_name):
       self._client.indices.create(self._index_name)
@@ -120,10 +137,14 @@ class GithubFetcher(object):
   def __init__(self, project_path):
     self.project_path = project_path
 
-  def GetCommits(self):
-    request = requests.get(
-        'https://api.github.com/repos/{0:s}/commits?sha=master'.format(
-            self.project_path))
+  def GetCommits(self, since=None):
+    request_url = 'https://api.github.com/repos/{0:s}/commits?sha=master'.format(
+            self.project_path)
+    if since:
+      since = since.isoformat()
+      request_url = '{0:s}&since={1:s}'.format(request_url, since)
+    request = requests.get(request_url)
+
     if not request.ok:
       return []
     commit_documents = json.loads(request.content)
