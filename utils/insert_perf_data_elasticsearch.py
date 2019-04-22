@@ -151,7 +151,7 @@ class TestReader(object):
         with open(file_path, 'r') as pinfo_file:
           try:
             pinfo_output = json.load(pinfo_file)
-          except ValueError:
+          except (ValueError, TypeError):
             print('Unable to load {0:s}'.format(filename))
             continue
           document = self.BuildTestDocument(pinfo_output, test_directory,
@@ -163,7 +163,7 @@ class TestReader(object):
                 test_number)
             try:
               pinfo_output = json.loads(pinfo_output)
-            except json.decoder.JSONDecodeError:
+            except (json.decoder.JSONDecodeError, TypeError):
               pinfo_output = None
             if pinfo_output:
               document = self.BuildTestDocument(pinfo_output, test_directory,
@@ -313,7 +313,7 @@ if __name__ == '__main__':
     _ = list(fetcher.DownloadPinfoFiles(
         series, minimum_test_number=minimum_test_number))
 
-  minimum_test_number = 0
-  reader = TestReader()
-  reader.ReadTests(fetcher, options.temporary_directory, importer,
-      minimum_test_number=minimum_test_number)
+    minimum_test_number = 0
+    reader = TestReader()
+    reader.ReadTests(fetcher, options.temporary_directory, importer,
+        minimum_test_number=minimum_test_number)
