@@ -313,7 +313,6 @@ if __name__ == '__main__':
     _ = list(fetcher.DownloadPinfoFiles(
         series, minimum_test_number=minimum_test_number))
 
-    minimum_test_number = 0
     reader = TestReader()
     reader.ReadTests(fetcher, options.temporary_directory, importer,
         minimum_test_number=minimum_test_number)
