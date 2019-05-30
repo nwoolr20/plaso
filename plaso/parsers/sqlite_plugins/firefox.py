@@ -91,6 +91,7 @@ class FirefoxPlacesPageVisitedEventData(events.EventData):
   """Firefox page visited event data.
 
   Attributes:
+    download_path (str): path of the target of the download.
     extra (list[object]): extra event data.
     host (str): visited hostname.
     title (str): title of the visited page.
@@ -105,6 +106,7 @@ class FirefoxPlacesPageVisitedEventData(events.EventData):
     """Initializes event data."""
     super(FirefoxPlacesPageVisitedEventData, self).__init__(
         data_type=self.DATA_TYPE)
+    self.download_path = None
     self.extra = None
     self.host = None
     self.title = None
@@ -117,7 +119,7 @@ class FirefoxDownloadEventData(events.EventData):
   """Firefox download event data.
 
   Attributes:
-    full_path (str): full path of the target of the download.
+    download_path (str): path of the target of the download.
     mime_type (str): mime type of the download.
     name (str): name of the download.
     received_bytes (int): number of bytes received.
@@ -133,7 +135,7 @@ class FirefoxDownloadEventData(events.EventData):
     """Initializes event data."""
     super(FirefoxDownloadEventData, self).__init__(
         data_type=self.DATA_TYPE)
-    self.full_path = None
+    self.download_path = None
     self.mime_type = None
     self.name = None
     self.offset = None
@@ -165,11 +167,11 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           'content', 'dateAdded', 'lastModified', 'id', 'item_id'])}
 
   QUERIES = [
-      (('SELECT moz_historyvisits.id, moz_places.url, moz_places.title, '
-        'moz_places.visit_count, moz_historyvisits.visit_date, '
-        'moz_historyvisits.from_visit, moz_places.rev_host, '
-        'moz_places.hidden, moz_places.typed, moz_historyvisits.visit_type '
-        'FROM moz_places, moz_historyvisits '
+      (('SELECT moz_historyvisits.id, moz_places.id AS place_id, '
+        'moz_places.url, moz_places.title, moz_places.visit_count, '
+        'moz_historyvisits.visit_date, moz_historyvisits.from_visit, '
+        'moz_places.rev_host, moz_places.hidden, moz_places.typed, '
+        'moz_historyvisits.visit_type FROM moz_places, moz_historyvisits '
         'WHERE moz_places.id = moz_historyvisits.place_id'),
        'ParsePageVisitedRow'),
       (('SELECT moz_bookmarks.type, moz_bookmarks.title AS bookmark_title, '
@@ -291,8 +293,13 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
 
   SCHEMAS = [_SCHEMA_V24, _SCHEMA_V25]
 
-  # Cache queries.
-  URL_CACHE_QUERY = (
+  _ATTRIBUTES_QUERY = (
+      'SELECT moz_anno_attributes.name AS name, moz_annos.content AS content '
+      'FROM moz_annos, moz_anno_attributes '
+      'WHERE moz_annos.place_id = {0:d} AND '
+      'moz_annos.anno_attribute_id = moz_anno_attributes.id')
+
+  _URL_CACHE_QUERY = (
       'SELECT h.id AS id, p.url, p.rev_host FROM moz_places p, '
       'moz_historyvisits h WHERE p.id = h.place_id')
 
@@ -302,6 +309,8 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       2: 'Folder',
       3: 'Separator',
   }
+
+  _VISIT_TYPE_DOWNLOAD = 7
 
   def ParseBookmarkAnnotationRow(
       self, parser_mediator, query, row, **unused_kwargs):
@@ -449,6 +458,8 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       extras.append('(URL not typed directly)')
 
     event_data = FirefoxPlacesPageVisitedEventData()
+    # TODO: refactor extra attribute.
+    event_data.extra = extras or None
     event_data.host = self._ReverseHostname(rev_host)
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
@@ -457,8 +468,22 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     event_data.visit_count = self._GetRowValue(query_hash, row, 'visit_count')
     event_data.visit_type = self._GetRowValue(query_hash, row, 'visit_type')
 
-    if extras:
-      event_data.extra = extras
+    if event_data.visit_type == self._VISIT_TYPE_DOWNLOAD:
+      place_identifier = self._GetRowValue(query_hash, row, 'place_id')
+      attributes_query = self._ATTRIBUTES_QUERY.format(place_identifier)
+      attributes_query_hash = hash(attributes_query)
+
+      for attribute_row in database.Query(attributes_query):
+        attribute_name = self._GetRowValue(
+            attributes_query_hash, attribute_row, 'name')
+
+        if attribute_name == 'downloads/destinationFileURI':
+          event_data.download_path = self._GetRowValue(
+              attributes_query_hash, attribute_row, 'content')
+
+        elif attribute_name == 'downloads/metaData':
+          # {"state":1,"endTime":1559238857592,"fileSize":2822144}
+          pass
 
     timestamp = self._GetRowValue(query_hash, row, 'visit_date')
     if timestamp:
@@ -506,7 +531,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     """
     url_cache_results = cache.GetResults('url')
     if not url_cache_results:
-      result_set = database.Query(self.URL_CACHE_QUERY)
+      result_set = database.Query(self._URL_CACHE_QUERY)
 
       cache.CacheQueryResults(
           result_set, 'url', 'id', ('url', 'rev_host'))
@@ -525,7 +550,7 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
   """Parses a Firefox downloads file.
 
   The Firefox downloads history is stored in a SQLite database file named
-  downloads.sqlite.
+  downloads.sqlite. Note that downloads.sqlite was last seen in Firefox 25.
   """
 
   NAME = 'firefox_downloads'
@@ -567,7 +592,7 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
     query_hash = hash(query)
 
     event_data = FirefoxDownloadEventData()
-    event_data.full_path = self._GetRowValue(query_hash, row, 'target')
+    event_data.download_path = self._GetRowValue(query_hash, row, 'target')
     event_data.mime_type = self._GetRowValue(query_hash, row, 'mimeType')
     event_data.name = self._GetRowValue(query_hash, row, 'name')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')

@@ -81,6 +81,7 @@ class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
       '({title})',
       '[count: {visit_count}]',
       'Host: {host}',
+      'Download path: {download_path}',
       '{extra_string}']
 
   FORMAT_STRING_SHORT_PIECES = ['URL: {url}']
@@ -115,6 +116,7 @@ class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
     if transition:
       transition_str = 'Transition: {0!s}'.format(transition)
 
+    # TODO: refactor extra attribute.
     extra = event_values.get('extra', None)
     if extra:
       if transition:
@@ -133,9 +135,9 @@ class FirefoxDowloadFormatter(interface.EventFormatter):
   DATA_TYPE = 'firefox:downloads:download'
 
   FORMAT_STRING = (
-      '{url} ({full_path}). Received: {received_bytes} bytes '
+      '{url} ({download_path}). Received: {received_bytes} bytes '
       'out of: {total_bytes} bytes.')
-  FORMAT_STRING_SHORT = '{full_path} downloaded ({received_bytes} bytes)'
+  FORMAT_STRING_SHORT = '{download_path} downloaded ({received_bytes} bytes)'
 
   SOURCE_LONG = 'Firefox History'
   SOURCE_SHORT = 'WEBHIST'
