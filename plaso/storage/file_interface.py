@@ -14,6 +14,77 @@ from plaso.storage import interface
 from plaso.storage.redis import redis_store
 
 
+class AttributeContainerList(object):
+  """Attribute container list.
+
+  The list is unsorted and pops attribute containers in the same order as
+  pushed to preserve order.
+
+  The GetAttributeContainerByIndex method should be used to read attribute
+  containers from the list while it being filled.
+
+  Attributes:
+    data_size (int): total data size of the attribute containers on the list.
+    next_sequence_number (int): next attribute container sequence number.
+  """
+
+  def __init__(self):
+    """Initializes an attribute container list."""
+    super(AttributeContainerList, self).__init__()
+    self._list = []
+    self.next_sequence_number = 0
+
+  @property
+  def number_of_attribute_containers(self):
+    """int: number of attribute containers on the list."""
+    return len(self._list)
+
+  def Empty(self):
+    """Empties the list."""
+    self._list = []
+
+  def GetAttributeContainerByIndex(self, index):
+    """Retrieves a specific attribute container from the list.
+
+    Args:
+      index (int): attribute container index.
+
+    Returns:
+      AttributeContainer: attribute container or None if not available.
+
+    Raises:
+      IndexError: if the index is less than zero.
+    """
+    if index < 0:
+      raise IndexError('Unsupported negative index value: {0:d}.'.format(index))
+
+    if index < len(self._list):
+      return self._list[index]
+
+    return None
+
+  def PopAttributeContainer(self):
+    """Pops an attribute container from the list.
+
+    Returns:
+      AttributeContainer: attribute container data or None if the list is empty.
+    """
+    try:
+      return self._list.pop(0)
+
+    except IndexError:
+      return None
+
+  def PushAttributeContainer(self, attribute_container):
+    """Pushes an attribute container onto the list.
+
+    Args:
+      attribute_container (AttributeContainer): attribute container.
+    """
+    self._list.append(attribute_container)
+    self.next_sequence_number += 1
+
+
 class SerializedAttributeContainerList(object):
   """Serialized attribute container list.
 
@@ -59,8 +130,7 @@ class SerializedAttributeContainerList(object):
       IndexError: if the index is less than zero.
     """
     if index < 0:
-      raise IndexError(
-          'Unsupported negative index value: {0:d}.'.format(index))
+      raise IndexError('Unsupported negative index value: {0:d}.'.format(index))
 
     if index < len(self._list):
       return self._list[index]
@@ -100,10 +170,27 @@ class BaseStorageFile(interface.BaseStore):
   def __init__(self):
     """Initializes a file-based store."""
     super(BaseStorageFile, self).__init__()
+    self._attribute_containers = {}
     self._is_open = False
     self._read_only = True
     self._serialized_attribute_containers = {}
     self._serializer = json_serializer.JSONAttributeContainerSerializer
+
+  def _GetAttributeContainerList(self, container_type):
+    """Retrieves an attribute container list.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      AttributeContainerList: attribute container list.
+    """
+    container_list = self._attribute_containers.get(container_type, None)
+    if not container_list:
+      container_list = AttributeContainerList()
+      self._attribute_containers[container_type] = container_list
+
+    return container_list
 
   def _GetNumberOfSerializedAttributeContainers(self, container_type):
     """Retrieves the number of serialized attribute containers.

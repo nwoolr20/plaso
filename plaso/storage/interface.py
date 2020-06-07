@@ -421,7 +421,9 @@ class BaseStore(object):
         except ValueError:
           raise IOError((
               'Session identifier mismatch for session configuration: '
-              '{0:d}').format(session_index))
+              '{0:d} (expected: {1!s}, stored: {2!s})').format(
+                  session_index, session.identifier,
+                  session_configuration.identifier))
 
       if session_completion:
         try:
@@ -429,7 +431,9 @@ class BaseStore(object):
         except ValueError:
           raise IOError((
               'Session identifier mismatch for session completion: '
-              '{0:d}').format(session_index))
+              '{0:d} (expected: {1!s}, stored: {2!s})').format(
+                  session_index, session.identifier,
+                  session_completion.identifier))
 
       yield session
 

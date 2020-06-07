@@ -66,6 +66,13 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       TypeError: if not an instance of AttributeContainer.
       ValueError: if the attribute container type is not supported.
     """
+    if isinstance(attribute_container, list):
+      return [cls._ConvertAttributeValueToDict(attribute_value)
+              for attribute_value in attribute_container]
+
+    if isinstance(attribute_container, dfvfs_path_spec.PathSpec):
+      return cls._ConvertPathSpecToDict(attribute_container)
+
     if not isinstance(
         attribute_container, containers_interface.AttributeContainer):
       raise TypeError('{0!s} is not an attribute container type.'.format(
@@ -577,7 +584,13 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
           AttributeContainer.
     """
     if json_dict:
+      if isinstance(json_dict, list):
+        return cls._ConvertListToObject(json_dict)
+
       json_object = cls._ConvertDictToObject(json_dict)
+      if isinstance(json_object, dfvfs_path_spec.PathSpec):
+        return json_object
+
       if not isinstance(json_object, containers_interface.AttributeContainer):
         raise TypeError('{0!s} is not an attribute container type.'.format(
             type(json_object)))
