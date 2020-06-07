@@ -59,11 +59,18 @@ class BaseStore(object):
       _CONTAINER_TYPE_TASK_COMPLETION,
       _CONTAINER_TYPE_TASK_START)
 
+  # Container types that are referenced from other container types.
+  _REFERENCED_CONTAINER_TYPES = (
+      _CONTAINER_TYPE_EVENT,
+      _CONTAINER_TYPE_EVENT_DATA,
+      _CONTAINER_TYPE_EVENT_DATA_STREAM,
+      _CONTAINER_TYPE_EVENT_SOURCE)
+
   # Container types that only should be used in a session store.
   _SESSION_STORE_ONLY_CONTAINER_TYPES = (
       _CONTAINER_TYPE_SESSION_COMPLETION,
-      _CONTAINER_TYPE_SESSION_START,
-      _CONTAINER_TYPE_SYSTEM_CONFIGURATION)
+      _CONTAINER_TYPE_SESSION_CONFIGURATION,
+      _CONTAINER_TYPE_SESSION_START)
 
   # Container types that only should be used in a task store.
   _TASK_STORE_ONLY_CONTAINER_TYPES = (

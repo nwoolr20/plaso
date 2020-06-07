@@ -192,31 +192,6 @@ class BaseStorageFile(interface.BaseStore):
 
     return container_list
 
-  def _GetNumberOfSerializedAttributeContainers(self, container_type):
-    """Retrieves the number of serialized attribute containers.
-
-    Args:
-      container_type (str): attribute container type.
-
-    Returns:
-      int: number of serialized attribute containers.
-    """
-    container_list = self._GetSerializedAttributeContainerList(container_type)
-    return container_list.number_of_attribute_containers
-
-  def _GetSerializedAttributeContainerByIndex(self, container_type, index):
-    """Retrieves a specific serialized attribute container.
-
-    Args:
-      container_type (str): attribute container type.
-      index (int): attribute container index.
-
-    Returns:
-      bytes: serialized attribute container data or None if not available.
-    """
-    container_list = self._GetSerializedAttributeContainerList(container_type)
-    return container_list.GetAttributeContainerByIndex(index)
-
   def _GetSerializedAttributeContainerList(self, container_type):
     """Retrieves a serialized attribute container list.
 

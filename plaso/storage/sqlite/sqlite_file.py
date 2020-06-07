@@ -30,7 +30,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
   _CONTAINERS_MANAGER = containers_manager.AttributeContainersManager
 
   _FORMAT_VERSION = 20200607
-  _SCHEMA_VERSION = 20200607
 
   # The earliest format version, stored in-file, that this class
   # is able to append (write).
@@ -40,13 +39,6 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
   # is able to read.
   _READ_COMPATIBLE_FORMAT_VERSION = 20170707
 
-  # Container types that are referenced from other container types.
-  _REFERENCED_CONTAINER_TYPES = (
-      file_interface.BaseStorageFile._CONTAINER_TYPE_EVENT,
-      file_interface.BaseStorageFile._CONTAINER_TYPE_EVENT_DATA,
-      file_interface.BaseStorageFile._CONTAINER_TYPE_EVENT_DATA_STREAM,
-      file_interface.BaseStorageFile._CONTAINER_TYPE_EVENT_SOURCE)
-
   _CONTAINER_SCHEMAS = {
       'event_data_stream': {
           'file_entropy': 'str',
@@ -55,6 +47,11 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
           'sha1_hash': 'str',
           'sha256_hash': 'str',
           'yara_match': 'str'},
+
+      'event_source': {
+          'data_type': 'str',
+          'file_entry_type': 'str',
+          'path_spec': 'dfvfs.PathSpec'},
 
       'session_completion': {
           'aborted': 'bool',
@@ -458,10 +455,14 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     count = self._GetNumberOfAttributeContainers(container_type)
     index -= count
 
-    serialized_data = self._GetSerializedAttributeContainerByIndex(
-        container_type, index)
-    attribute_container = self._DeserializeAttributeContainer(
-        container_type, serialized_data)
+    if self._use_schema and schema:
+      container_list = self._GetAttributeContainerList(container_type)
+      attribute_container = container_list.GetAttributeContainerByIndex(index)
+    else:
+      container_list = self._GetSerializedAttributeContainerList(container_type)
+      serialized_data = container_list.GetAttributeContainerByIndex(index)
+      attribute_container = self._DeserializeAttributeContainer(
+          container_type, serialized_data)
 
     if attribute_container:
       identifier = identifiers.SQLTableIdentifier(
@@ -1183,11 +1184,20 @@ class SQLiteStorageFile(file_interface.BaseStorageFile):
     Returns:
       int: number of event sources.
     """
-    number_of_event_sources = self._GetNumberOfAttributeContainers(
-        self._CONTAINER_TYPE_EVENT_SOURCE)
+    container_type = self._CONTAINER_TYPE_EVENT_SOURCE
 
-    number_of_event_sources += self._GetNumberOfSerializedAttributeContainers(
-        self._CONTAINER_TYPE_EVENT_SOURCE)
+    schema = self._CONTAINER_SCHEMAS.get(container_type, {})
+
+    number_of_event_sources = self._GetNumberOfAttributeContainers(
+        container_type)
+
+    if self._use_schema and schema:
+      container_list = self._GetAttributeContainerList(container_type)
+    else:
+      container_list = self._GetSerializedAttributeContainerList(container_type)
+
+    number_of_event_sources += container_list.number_of_attribute_containers
+
     return number_of_event_sources
 
   def GetSortedEvents(self, time_range=None):
