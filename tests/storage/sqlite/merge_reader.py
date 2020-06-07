@@ -58,25 +58,6 @@ class SQLiteStorageMergeReaderTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  def testReadStorageMetadata(self):
-    """Tests the _ReadStorageMetadata function."""
-    session = sessions.Session()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      task_storage_path = os.path.join(temp_directory, 'task.sqlite')
-      self._CreateTaskStorageFile(session, task_storage_path, self._TEST_EVENTS)
-
-      session_storage_path = os.path.join(temp_directory, 'plaso.sqlite')
-      storage_writer = writer.SQLiteStorageFileWriter(
-          session, session_storage_path)
-
-      test_reader = merge_reader.SQLiteStorageMergeReader(
-          storage_writer, task_storage_path)
-
-      test_reader._Open()
-      test_reader._ReadStorageMetadata()
-      test_reader._Close()
-
   def testMergeAttributeContainers(self):
     """Tests the MergeAttributeContainers function."""
     session = sessions.Session()
