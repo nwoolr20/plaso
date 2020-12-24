@@ -29,7 +29,7 @@ class ElasticImporter(object):
     Args:
       host (Optional[str]): hostname of the elasticsearch server.
       port (Optional[int]): port the elasticsearch server is listening on.
-      index (Optional[str]): elastiosearch index name.
+      index (Optional[str]): elasticsearch index name.
     """
     super(ElasticImporter, self).__init__()
     self._client = elasticsearch.Elasticsearch([{'host': host, 'port': port}])
@@ -256,7 +256,8 @@ class TestReader(object):
     counters = pinfo_output['storage_counters']
 
     events_counter = counters['parsers']
-    del events_counter['total']
+    if 'total' in events_counter:
+      del events_counter['total']
     total_events = sum(events_counter.values())
 
     warnings_by_parser_chain = counters['warnings_by_parser_chain']
